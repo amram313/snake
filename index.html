@@ -94,7 +94,7 @@
   </div>
 
   <div id="instructions">
-    ← → ↑ ↓ לשליטה &nbsp;|&nbsp; ⭐ זהב = +3 &nbsp;|&nbsp; כל 5 נקודות = רמה חדשה
+    ← → ↑ ↓ לשליטה &nbsp;|&nbsp; ⭐ זהב = +3 &nbsp;|&nbsp; כל 5 נקודות = רמה חדשה &nbsp;|&nbsp; Space / P = השהיה
   </div>
 
   <div id="dpad">
@@ -120,7 +120,8 @@
   const BASE_SPEED = 150;
 
   let snake, dir, nextDir, food, bonusFood;
-  let score, highScore = 0;
+  let score, highScore = parseInt(localStorage.getItem('snakeHighScore') || '0');
+  let paused = false;
   let particles = [], floatingTexts = [];
   let gameRunning = false, logicTimeout = null, bonusTimer = null;
   let bonusCountdown = 0, shakeFrames = 0;
@@ -151,8 +152,9 @@
     snake   = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
     dir     = { x: 1, y: 0 };
     nextDir = { x: 1, y: 0 };
-    score = 0;
+    score = 0; paused = false;
     scoreEl.textContent = 0;
+    highScoreEl.textContent = highScore;
     levelBadge.textContent = 'רמה 1';
     particles = []; floatingTexts = [];
     bonusFood = null; shakeFrames = 0;
@@ -213,7 +215,7 @@
       const prevLevel = getLevel();
       score++;
       scoreEl.textContent = score;
-      if (score > highScore) { highScore = score; highScoreEl.textContent = highScore; }
+      if (score > highScore) { highScore = score; highScoreEl.textContent = highScore; localStorage.setItem('snakeHighScore', highScore); }
       const newLevel = getLevel();
       levelBadge.textContent = `רמה ${newLevel}`;
       if (newLevel > prevLevel) bumpBadge();
@@ -226,7 +228,7 @@
       ate = true;
       score += 3;
       scoreEl.textContent = score;
-      if (score > highScore) { highScore = score; highScoreEl.textContent = highScore; }
+      if (score > highScore) { highScore = score; highScoreEl.textContent = highScore; localStorage.setItem('snakeHighScore', highScore); }
       levelBadge.textContent = `רמה ${getLevel()}`;
       spawnParticles(head.x, head.y, '#ffd700');
       spawnFloat(head.x, head.y, '+3', '#ffd700');
@@ -368,7 +370,23 @@
   // ── Logic loop ───────────────────────────────────────────────────────────
   function scheduleLogic() {
     if (!gameRunning) return;
-    logicTimeout = setTimeout(() => { update(); scheduleLogic(); }, getSpeed());
+    logicTimeout = setTimeout(() => { if (!paused) update(); scheduleLogic(); }, getSpeed());
+  }
+
+  function togglePause() {
+    if (!gameRunning) return;
+    paused = !paused;
+    if (paused) {
+      overlay.style.display = 'flex';
+      overlayTitle.textContent = '⏸ השהיה';
+      overlayTitle.style.color = '#4ecca3';
+      overlaySub.textContent = 'לחץ Space או P להמשך';
+      overlayScore.style.display = 'none';
+      startBtn.style.display = 'none';
+    } else {
+      overlay.style.display = 'none';
+      startBtn.style.display = '';
+    }
   }
 
   function endGame() {
@@ -382,6 +400,7 @@
       overlaySub.textContent = 'הניקוד שלך:';
       overlayScore.textContent = score;
       overlayScore.style.display = 'block';
+      startBtn.style.display = '';
       startBtn.textContent = 'שחק שוב';
       overlay.style.display = 'flex';
     }, 400);
@@ -396,7 +415,9 @@
 
   // ── Keyboard ─────────────────────────────────────────────────────────────
   document.addEventListener('keydown', e => {
-    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+    if (e.key === ' ' || e.key === 'p' || e.key === 'P') { togglePause(); return; }
+    if (paused) return;
     if (e.key === 'ArrowUp'    && dir.y !== 1)  nextDir = { x: 0, y: -1 };
     if (e.key === 'ArrowDown'  && dir.y !== -1) nextDir = { x: 0, y:  1 };
     if (e.key === 'ArrowLeft'  && dir.x !== 1)  nextDir = { x:-1, y:  0 };
