@@ -5,109 +5,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>משחק הנחש</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #1a1a2e;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       font-family: 'Segoe UI', sans-serif;
       color: #eee;
     }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 10px;
-      color: #4ecca3;
-      letter-spacing: 2px;
-    }
-
+    h1 { font-size: 2rem; margin-bottom: 10px; color: #4ecca3; letter-spacing: 2px; }
     #score-board {
-      display: flex;
-      gap: 40px;
-      margin-bottom: 15px;
-      font-size: 1rem;
+      display: flex; gap: 30px; margin-bottom: 15px;
+      font-size: 1rem; align-items: center;
     }
-
-    #score-board span {
-      color: #aaa;
+    #score-board span { color: #aaa; }
+    #score-board strong { color: #4ecca3; font-size: 1.2rem; }
+    #level-badge {
+      background: #4ecca3; color: #1a1a2e; font-weight: bold;
+      padding: 3px 12px; border-radius: 20px; font-size: 0.85rem;
+      transition: transform 0.15s;
     }
-
-    #score-board strong {
-      color: #4ecca3;
-      font-size: 1.2rem;
-    }
-
-    #game-container {
-      position: relative;
-    }
-
+    #level-badge.bump { transform: scale(1.3); }
+    #game-container { position: relative; }
     canvas {
-      border: 2px solid #4ecca3;
-      border-radius: 4px;
-      display: block;
-      box-shadow: 0 0 30px rgba(78, 204, 163, 0.3);
+      border: 2px solid #4ecca3; border-radius: 4px; display: block;
+      box-shadow: 0 0 30px rgba(78,204,163,0.3);
     }
-
     #overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
+      position: absolute; inset: 0; background: rgba(0,0,0,0.78);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; border-radius: 4px;
     }
-
-    #overlay h2 {
-      font-size: 2rem;
-      color: #ff6b6b;
-      margin-bottom: 10px;
-    }
-
-    #overlay p {
-      color: #ccc;
-      margin-bottom: 5px;
-      font-size: 1rem;
-    }
-
-    #overlay .final-score {
-      font-size: 1.4rem;
-      color: #4ecca3;
-      font-weight: bold;
-      margin: 10px 0 20px;
-    }
-
+    #overlay h2 { font-size: 2rem; color: #ff6b6b; margin-bottom: 10px; }
+    #overlay p  { color: #ccc; margin-bottom: 5px; font-size: 1rem; }
+    .final-score { font-size: 1.4rem; color: #4ecca3; font-weight: bold; margin: 10px 0 20px; }
     button {
-      background: #4ecca3;
-      color: #1a1a2e;
-      border: none;
-      padding: 12px 30px;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
+      background: #4ecca3; color: #1a1a2e; border: none;
+      padding: 12px 30px; font-size: 1rem; font-weight: bold;
+      border-radius: 6px; cursor: pointer; transition: background 0.2s;
     }
+    button:hover { background: #38b28d; }
+    #instructions { margin-top: 15px; font-size: 0.8rem; color: #666; text-align: center; }
 
-    button:hover {
-      background: #38b28d;
+    /* D-pad (touch only) */
+    #dpad {
+      display: none;
+      margin-top: 20px;
+      grid-template-areas: ". up ." "left . right" ". down .";
+      grid-template-columns: 58px 58px 58px;
+      grid-template-rows: 58px 58px 58px;
+      gap: 5px;
     }
-
-    #instructions {
-      margin-top: 15px;
-      font-size: 0.8rem;
-      color: #666;
-      text-align: center;
+    @media (pointer: coarse) { #dpad { display: grid; } }
+    .dpad-btn {
+      background: rgba(78,204,163,0.12); border: 1px solid rgba(78,204,163,0.4);
+      color: #4ecca3; font-size: 1.5rem; border-radius: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation;
     }
+    .dpad-btn:active { background: rgba(78,204,163,0.45); }
+    #btn-up    { grid-area: up;    }
+    #btn-left  { grid-area: left;  }
+    #btn-right { grid-area: right; }
+    #btn-down  { grid-area: down;  }
   </style>
 </head>
 <body>
@@ -117,11 +80,11 @@
   <div id="score-board">
     <div>ניקוד: <strong id="score">0</strong></div>
     <div>שיא: <strong id="high-score">0</strong></div>
+    <span id="level-badge">רמה 1</span>
   </div>
 
   <div id="game-container">
     <canvas id="canvas" width="400" height="400"></canvas>
-
     <div id="overlay">
       <h2 id="overlay-title">משחק הנחש</h2>
       <p id="overlay-sub">השתמש בחצים כדי לנהוג</p>
@@ -130,114 +93,228 @@
     </div>
   </div>
 
-  <div id="instructions">חצים ← → ↑ ↓ לשליטה &nbsp;|&nbsp; אכול את האוכל, אל תיגע בקירות</div>
+  <div id="instructions">
+    ← → ↑ ↓ לשליטה &nbsp;|&nbsp; ⭐ זהב = +3 &nbsp;|&nbsp; כל 5 נקודות = רמה חדשה
+  </div>
+
+  <div id="dpad">
+    <button class="dpad-btn" id="btn-up">↑</button>
+    <button class="dpad-btn" id="btn-left">←</button>
+    <button class="dpad-btn" id="btn-right">→</button>
+    <button class="dpad-btn" id="btn-down">↓</button>
+  </div>
 
 <script>
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  const overlay = document.getElementById('overlay');
+  const canvas   = document.getElementById('canvas');
+  const ctx      = canvas.getContext('2d');
+  const overlay  = document.getElementById('overlay');
   const startBtn = document.getElementById('start-btn');
-  const scoreEl = document.getElementById('score');
-  const highScoreEl = document.getElementById('high-score');
-  const overlayTitle = document.getElementById('overlay-title');
-  const overlaySub = document.getElementById('overlay-sub');
-  const overlayScore = document.getElementById('overlay-score');
+  const scoreEl       = document.getElementById('score');
+  const highScoreEl   = document.getElementById('high-score');
+  const levelBadge    = document.getElementById('level-badge');
+  const overlayTitle  = document.getElementById('overlay-title');
+  const overlaySub    = document.getElementById('overlay-sub');
+  const overlayScore  = document.getElementById('overlay-score');
 
-  const TILE = 20;
-  const COLS = canvas.width / TILE;
-  const ROWS = canvas.height / TILE;
+  const TILE = 20, COLS = canvas.width / TILE, ROWS = canvas.height / TILE;
+  const BASE_SPEED = 150;
 
-  let snake, dir, nextDir, food, score, highScore, gameLoop;
-  highScore = 0;
+  let snake, dir, nextDir, food, bonusFood;
+  let score, highScore = 0;
+  let particles = [], floatingTexts = [];
+  let gameRunning = false, logicTimeout = null, bonusTimer = null;
+  let bonusCountdown = 0, shakeFrames = 0;
 
+  // ── Audio ────────────────────────────────────────────────────────────────
+  let _ac = null;
+  function getAC() { return _ac || (_ac = new (window.AudioContext || window.webkitAudioContext)()); }
+  function tone(freq, dur, type = 'sine', vol = 0.07) {
+    try {
+      const ac = getAC(), o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(vol, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+      o.start(); o.stop(ac.currentTime + dur);
+    } catch (e) {}
+  }
+  function playEat()   { tone(440, 0.1); }
+  function playBonus() { tone(660, 0.07); setTimeout(() => tone(880, 0.1), 70); }
+  function playDead()  { tone(200, 0.45, 'sawtooth', 0.1); }
+
+  // ── Level / speed ────────────────────────────────────────────────────────
+  function getLevel() { return Math.floor(score / 5) + 1; }
+  function getSpeed() { return Math.max(65, BASE_SPEED - (getLevel() - 1) * 12); }
+
+  // ── Init ─────────────────────────────────────────────────────────────────
   function initGame() {
-    snake = [
-      { x: 10, y: 10 },
-      { x: 9, y: 10 },
-      { x: 8, y: 10 },
-    ];
-    dir = { x: 1, y: 0 };
+    snake   = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+    dir     = { x: 1, y: 0 };
     nextDir = { x: 1, y: 0 };
     score = 0;
     scoreEl.textContent = 0;
+    levelBadge.textContent = 'רמה 1';
+    particles = []; floatingTexts = [];
+    bonusFood = null; shakeFrames = 0;
     placeFood();
+    scheduleBonusFood();
   }
 
   function placeFood() {
-    let pos;
-    do {
-      pos = {
-        x: Math.floor(Math.random() * COLS),
-        y: Math.floor(Math.random() * ROWS),
-      };
-    } while (snake.some(s => s.x === pos.x && s.y === pos.y));
-    food = pos;
+    let p;
+    do { p = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
+    while (snake.some(s => s.x === p.x && s.y === p.y));
+    food = p;
   }
 
+  function scheduleBonusFood() {
+    clearTimeout(bonusTimer);
+    bonusTimer = setTimeout(() => {
+      if (!gameRunning) return;
+      let p;
+      do { p = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
+      while (snake.some(s => s.x === p.x && s.y === p.y) || (p.x === food.x && p.y === food.y));
+      bonusFood = p;
+      bonusCountdown = Math.round(5000 / getSpeed());
+    }, 10000 + Math.random() * 8000);
+  }
+
+  // ── Particles ────────────────────────────────────────────────────────────
+  function spawnParticles(gx, gy, color) {
+    for (let i = 0; i < 10; i++) {
+      const a = (Math.PI * 2 * i) / 10;
+      particles.push({
+        x: gx * TILE + TILE / 2, y: gy * TILE + TILE / 2,
+        vx: Math.cos(a) * (2 + Math.random() * 3),
+        vy: Math.sin(a) * (2 + Math.random() * 3),
+        life: 1, color
+      });
+    }
+  }
+
+  function spawnFloat(gx, gy, text, color) {
+    floatingTexts.push({ x: gx * TILE + TILE / 2, y: gy * TILE - 4, text, color, life: 1 });
+  }
+
+  // ── Update (game logic) ──────────────────────────────────────────────────
   function update() {
     dir = nextDir;
     const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
 
-    // hit wall
-    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
-      return endGame();
-    }
-
-    // hit self
-    if (snake.some(s => s.x === head.x && s.y === head.y)) {
-      return endGame();
-    }
+    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) return endGame();
+    if (snake.some(s => s.x === head.x && s.y === head.y)) return endGame();
 
     snake.unshift(head);
 
+    let ate = false;
+
     if (head.x === food.x && head.y === food.y) {
+      ate = true;
+      const prevLevel = getLevel();
       score++;
       scoreEl.textContent = score;
-      if (score > highScore) {
-        highScore = score;
-        highScoreEl.textContent = highScore;
-      }
+      if (score > highScore) { highScore = score; highScoreEl.textContent = highScore; }
+      const newLevel = getLevel();
+      levelBadge.textContent = `רמה ${newLevel}`;
+      if (newLevel > prevLevel) bumpBadge();
+      spawnParticles(head.x, head.y, '#ff6b6b');
+      spawnFloat(head.x, head.y, '+1', '#ff6b6b');
+      playEat();
       placeFood();
-    } else {
-      snake.pop();
+
+    } else if (bonusFood && head.x === bonusFood.x && head.y === bonusFood.y) {
+      ate = true;
+      score += 3;
+      scoreEl.textContent = score;
+      if (score > highScore) { highScore = score; highScoreEl.textContent = highScore; }
+      levelBadge.textContent = `רמה ${getLevel()}`;
+      spawnParticles(head.x, head.y, '#ffd700');
+      spawnFloat(head.x, head.y, '+3', '#ffd700');
+      playBonus();
+      bonusFood = null;
+      scheduleBonusFood();
     }
 
-    draw();
+    if (!ate) snake.pop();
+
+    if (bonusFood && --bonusCountdown <= 0) {
+      bonusFood = null;
+      scheduleBonusFood();
+    }
   }
 
-  function draw() {
-    // background
+  function bumpBadge() {
+    levelBadge.classList.add('bump');
+    setTimeout(() => levelBadge.classList.remove('bump'), 200);
+  }
+
+  // ── Draw (render loop via rAF) ────────────────────────────────────────────
+  function draw(now) {
+    if (!food) return; // not yet initialised
+
+    ctx.save();
+    if (shakeFrames > 0) {
+      shakeFrames--;
+      const s = shakeFrames * 1.4;
+      ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+    }
+
+    // Background
     ctx.fillStyle = '#0f0f1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // grid (subtle)
+    // Grid
     ctx.strokeStyle = 'rgba(255,255,255,0.03)';
     ctx.lineWidth = 1;
     for (let x = 0; x <= COLS; x++) {
-      ctx.beginPath();
-      ctx.moveTo(x * TILE, 0);
-      ctx.lineTo(x * TILE, canvas.height);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x * TILE, 0); ctx.lineTo(x * TILE, canvas.height); ctx.stroke();
     }
     for (let y = 0; y <= ROWS; y++) {
-      ctx.beginPath();
-      ctx.moveTo(0, y * TILE);
-      ctx.lineTo(canvas.width, y * TILE);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y * TILE); ctx.lineTo(canvas.width, y * TILE); ctx.stroke();
     }
 
-    // food
-    const fx = food.x * TILE + TILE / 2;
-    const fy = food.y * TILE + TILE / 2;
+    // Particles
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color; ctx.shadowBlur = 4;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+      p.x += p.vx; p.y += p.vy; p.vx *= 0.87; p.vy *= 0.87; p.life -= 0.05;
+    });
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    // Food – pulsing circle
+    const pulse = 0.5 + 0.5 * Math.sin(now * 0.005);
+    const fx = food.x * TILE + TILE / 2, fy = food.y * TILE + TILE / 2;
     ctx.fillStyle = '#ff6b6b';
-    ctx.shadowColor = '#ff6b6b';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.arc(fx, fy, TILE / 2 - 2, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.shadowColor = '#ff6b6b'; ctx.shadowBlur = 6 + pulse * 10;
+    ctx.beginPath(); ctx.arc(fx, fy, TILE / 2 - 2 + pulse * 1.5, 0, Math.PI * 2); ctx.fill();
     ctx.shadowBlur = 0;
 
-    // snake
+    // Bonus food – spinning gold star
+    if (bonusFood) {
+      const blink = bonusCountdown < 40 ? (Math.floor(bonusCountdown / 4) % 2 === 0) : true;
+      if (blink) {
+        const bx = bonusFood.x * TILE + TILE / 2, by = bonusFood.y * TILE + TILE / 2;
+        const r = TILE / 2 - 1;
+        ctx.save();
+        ctx.translate(bx, by); ctx.rotate(now * 0.003);
+        ctx.fillStyle = '#ffd700'; ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 18;
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const a = (i * Math.PI) / 5 - Math.PI / 2;
+          const rad = i % 2 === 0 ? r : r * 0.4;
+          i === 0
+            ? ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad)
+            : ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    }
+
+    // Snake
     snake.forEach((seg, i) => {
       const ratio = i / snake.length;
       const r = Math.round(78 - ratio * 30);
@@ -246,63 +323,110 @@
       ctx.fillStyle = `rgb(${r},${g},${b})`;
 
       if (i === 0) {
-        // head - rounded
-        ctx.shadowColor = '#4ecca3';
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#4ecca3'; ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.roundRect(seg.x * TILE + 1, seg.y * TILE + 1, TILE - 2, TILE - 2, 4);
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.fill(); ctx.shadowBlur = 0;
 
-        // eyes
+        // Eyes – position based on direction
+        let e1, e2;
+        if      (dir.x >  0) { e1 = { x: 14, y: 5 };  e2 = { x: 14, y: 13 }; }
+        else if (dir.x <  0) { e1 = { x: 4,  y: 5 };  e2 = { x: 4,  y: 13 }; }
+        else if (dir.y <  0) { e1 = { x: 5,  y: 4 };  e2 = { x: 13, y: 4 };  }
+        else                 { e1 = { x: 5,  y: 14 }; e2 = { x: 13, y: 14 }; }
         ctx.fillStyle = '#1a1a2e';
-        const ex = dir.x === 0 ? [4, 12] : dir.x > 0 ? [12, 12] : [6, 6];
-        const ey = dir.y === 0 ? [dir.x !== 0 ? 6 : 6, dir.x !== 0 ? 14 : 14] : dir.y > 0 ? [12, 12] : [6, 6];
-        ctx.beginPath();
-        ctx.arc(seg.x * TILE + ex[0], seg.y * TILE + ey[0], 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(seg.x * TILE + ex[1], seg.y * TILE + ey[1], 2, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(seg.x * TILE + e1.x, seg.y * TILE + e1.y, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(seg.x * TILE + e2.x, seg.y * TILE + e2.y, 2, 0, Math.PI * 2); ctx.fill();
       } else {
         ctx.beginPath();
         ctx.roundRect(seg.x * TILE + 2, seg.y * TILE + 2, TILE - 4, TILE - 4, 3);
         ctx.fill();
       }
     });
+
+    // Floating score texts
+    floatingTexts = floatingTexts.filter(f => f.life > 0);
+    floatingTexts.forEach(f => {
+      ctx.globalAlpha = f.life;
+      ctx.fillStyle = f.color; ctx.shadowColor = f.color; ctx.shadowBlur = 6;
+      ctx.font = 'bold 14px Segoe UI'; ctx.textAlign = 'center';
+      ctx.fillText(f.text, f.x, f.y);
+      f.y -= 1; f.life -= 0.03;
+    });
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  // ── Render loop (always running) ─────────────────────────────────────────
+  function renderLoop(now) {
+    draw(now);
+    requestAnimationFrame(renderLoop);
+  }
+  requestAnimationFrame(renderLoop);
+
+  // ── Logic loop ───────────────────────────────────────────────────────────
+  function scheduleLogic() {
+    if (!gameRunning) return;
+    logicTimeout = setTimeout(() => { update(); scheduleLogic(); }, getSpeed());
   }
 
   function endGame() {
-    clearInterval(gameLoop);
-    overlayTitle.textContent = 'משחק נגמר!';
-    overlayTitle.style.color = '#ff6b6b';
-    overlaySub.textContent = 'הניקוד שלך:';
-    overlayScore.textContent = score;
-    overlayScore.style.display = 'block';
-    startBtn.textContent = 'שחק שוב';
-    overlay.style.display = 'flex';
+    gameRunning = false;
+    clearTimeout(logicTimeout); clearTimeout(bonusTimer);
+    shakeFrames = 12;
+    playDead();
+    setTimeout(() => {
+      overlayTitle.textContent = 'משחק נגמר!';
+      overlayTitle.style.color = '#ff6b6b';
+      overlaySub.textContent = 'הניקוד שלך:';
+      overlayScore.textContent = score;
+      overlayScore.style.display = 'block';
+      startBtn.textContent = 'שחק שוב';
+      overlay.style.display = 'flex';
+    }, 400);
   }
 
   function startGame() {
     overlay.style.display = 'none';
     initGame();
-    draw();
-    const speed = 150;
-    gameLoop = setInterval(update, speed);
+    gameRunning = true;
+    scheduleLogic();
   }
 
+  // ── Keyboard ─────────────────────────────────────────────────────────────
   document.addEventListener('keydown', e => {
-    switch (e.key) {
-      case 'ArrowUp':    if (dir.y !== 1)  nextDir = { x: 0, y: -1 }; break;
-      case 'ArrowDown':  if (dir.y !== -1) nextDir = { x: 0, y: 1 };  break;
-      case 'ArrowLeft':  if (dir.x !== 1)  nextDir = { x: -1, y: 0 }; break;
-      case 'ArrowRight': if (dir.x !== -1) nextDir = { x: 1, y: 0 };  break;
-    }
-    e.preventDefault();
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+    if (e.key === 'ArrowUp'    && dir.y !== 1)  nextDir = { x: 0, y: -1 };
+    if (e.key === 'ArrowDown'  && dir.y !== -1) nextDir = { x: 0, y:  1 };
+    if (e.key === 'ArrowLeft'  && dir.x !== 1)  nextDir = { x:-1, y:  0 };
+    if (e.key === 'ArrowRight' && dir.x !== -1) nextDir = { x: 1, y:  0 };
   });
+
+  // ── D-pad ────────────────────────────────────────────────────────────────
+  document.getElementById('btn-up')   .addEventListener('click', () => { if (dir.y !== 1)  nextDir = { x: 0, y:-1 }; });
+  document.getElementById('btn-down') .addEventListener('click', () => { if (dir.y !== -1) nextDir = { x: 0, y: 1 }; });
+  document.getElementById('btn-left') .addEventListener('click', () => { if (dir.x !== 1)  nextDir = { x:-1, y: 0 }; });
+  document.getElementById('btn-right').addEventListener('click', () => { if (dir.x !== -1) nextDir = { x: 1, y: 0 }; });
+
+  // ── Touch swipe ──────────────────────────────────────────────────────────
+  let touchStart = null;
+  canvas.addEventListener('touchstart', e => { touchStart = e.touches[0]; e.preventDefault(); }, { passive: false });
+  canvas.addEventListener('touchend', e => {
+    if (!touchStart) return;
+    const dx = e.changedTouches[0].clientX - touchStart.clientX;
+    const dy = e.changedTouches[0].clientY - touchStart.clientY;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx >  20 && dir.x !== -1) nextDir = { x: 1, y: 0 };
+      if (dx < -20 && dir.x !==  1) nextDir = { x:-1, y: 0 };
+    } else {
+      if (dy >  20 && dir.y !== -1) nextDir = { x: 0, y: 1 };
+      if (dy < -20 && dir.y !==  1) nextDir = { x: 0, y:-1 };
+    }
+    touchStart = null; e.preventDefault();
+  }, { passive: false });
 
   startBtn.addEventListener('click', startGame);
 </script>
-
 </body>
 </html>
